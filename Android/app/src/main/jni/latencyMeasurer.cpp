@@ -2,6 +2,11 @@
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
+#include <android/log.h>
+
+
+#define LOGI(...) __android_log_print(ANDROID_LOG_INFO, "superpoweredlatency", __VA_ARGS__)
+
 
 /*
  Cross-platform class measuring round-trip audio latency.
@@ -144,9 +149,9 @@ void latencyMeasurer::processInput(short int *audio, int _samplerate, int number
         case idle: break;
 
         default: // Waiting 1 second.
-            samplesElapsed += numberOfSamples;
+            samplesElapsed += numberOfSamples ;
 
-            if (samplesElapsed > samplerate) { // 1 second elapsed, start over.
+            if (samplesElapsed > (samplerate * 8) ) { // 1 second elapsed, start over.
                 samplesElapsed = 0;
                 measurementState = nextMeasurementState = measure_average_loudness_for_1_sec;
             };
@@ -155,7 +160,7 @@ void latencyMeasurer::processInput(short int *audio, int _samplerate, int number
 
 void latencyMeasurer::processOutput(short int *audio) {
     if (measurementState == passthrough) return;
-
+    //LOGI("processOutput");
     if (rampdec < 0.0f) memset(audio, 0, (size_t)buffersize * 4); // Output silence.
     else { // Output sine wave.
         float ramp = 1.0f, mul = (2.0f * float(M_PI) * 1000.0f) / float(samplerate); // 1000 Hz

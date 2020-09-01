@@ -44,14 +44,21 @@ static void openSLESOutputCallback(SLAndroidSimpleBufferQueueItf caller, __unuse
     if (openSLES.outputBufferWriteIndex < NUMOPENSLESBUFFERS - 1) openSLES.outputBufferWriteIndex++; else openSLES.outputBufferWriteIndex = 0;
 
     if (__sync_fetch_and_add(&openSLES.inputBuffersAvailable, 0) > 0) {
+        LOGI("1 openSLESOutputCallback");
         __sync_fetch_and_add(&openSLES.inputBuffersAvailable, -1);
         short int *inputBuffer = openSLES.inputBuffers[openSLES.inputBufferReadIndex];
         if (openSLES.inputBufferReadIndex < NUMOPENSLESBUFFERS - 1) openSLES.inputBufferReadIndex++; else openSLES.inputBufferReadIndex = 0;
 
         measurer->processInput(inputBuffer, samplerate, buffersize);
         measurer->processOutput(outputBuffer);
-        if (measurer->state == -1) memcpy(outputBuffer, inputBuffer, (size_t)buffersize * 4);
-    } else memset(outputBuffer, 0, (size_t)buffersize * 4);
+        if (measurer->state == -1) {
+            LOGI("memcpy");
+            memcpy(outputBuffer, inputBuffer, (size_t)buffersize * 4);
+        }
+    } else {
+        LOGI("0 openSLESOutputCallback");
+        memset(outputBuffer, 0, (size_t)buffersize * 4);
+    }
 
     (*caller)->Enqueue(caller, outputBuffer, (SLuint32)buffersize * 4);
 }
